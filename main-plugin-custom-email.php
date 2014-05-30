@@ -17,10 +17,10 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 function trigger_status($order_id){
 
     // Use of the global Wordpress Database.
-	global $wpdb;
+    global $wpdb;
 	
 	// Get the customer e-mail
-    $results = (array) $wpdb->get_results( 'SELECT * FROM wp_postmeta WHERE meta_key = \'_billing_email\' AND post_id = ' . $order_id);
+    $results = (array) $wpdb->get_results( "SELECT * FROM " . $wpdb->prefix  . "postmeta WHERE meta_key = '_billing_email' AND post_id = " . $order_id);
     $email = (array) $results[0];
 
     $order = new WC_Order($order_id);
@@ -32,7 +32,7 @@ function trigger_status($order_id){
 	// Send the custom mail on the custom status, if the order status has been changed. 
     switch($orderstatus["status"]){
         case    'my_custom_status':
-            $data = (array) $wpdb->get_results("SELECT * FROM wp_md_custom_mails WHERE mail_type = 'order-pending'");
+            $data = (array) $wpdb->get_results("SELECT * FROM " . $wpdb->prefix  . "custom_mails WHERE mail_type = 'order-pending'");
             $data = (array) $data[0];
             new Custom_Order_Status_Email($email['meta_value'], $data['mail_title'], nl2br($data['mail_content']));
             break;
@@ -42,7 +42,7 @@ function trigger_status($order_id){
 function trigger_plugin_activated(){
 
     // Use of the global Wordpress Database.
-	global $wpdb;
+    global $wpdb;
 	
 	// Define your custom table name
     $table_name = $wpdb->prefix . "custom_mails";
@@ -60,22 +60,22 @@ function trigger_plugin_activated(){
         // Reference to upgrade.php file
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 		
-		// Execute the create query
+	// Execute the create query
         dbDelta( $sql );
 
-		// Insert default mail data
+	// Insert default mail data
         $wpdb->insert( $table_name, array( 'mail_type' => 'order-new', 'mail_title' => 'new order title', 'mail_content' => 'My mail body text' ) );
     }
 
 	// Add a custom order status to 'shop_order_status', slug will be created as 'a custom status name' => 'a_custom_status_name'. This will also be your trigger.
-    // wp_insert_term( 'a custom status name', 'shop_order_status' );
+	// wp_insert_term( 'a custom status name', 'shop_order_status' );
 	wp_insert_term( 'My custom status', 'shop_order_status' );
 
 }
 
 function trigger_plugin_deactivated(){
 
-		// Remove, if exist, the custom added order status(es)
+	// Remove, if exist, the custom added order status(es)
         $term = get_term_by( 'name', 'My custom status', 'shop_order_status' );
         if ( $term ) {
             wp_delete_term( $term->term_id, 'shop_order_status' );
@@ -92,7 +92,7 @@ function cm_plugin_settings() {
 function cm_display_settings() {
 
     // Use of the global Wordpress Database.
-	global $wpdb;
+    global $wpdb;
 	
     if(isset($_POST['update'])){
         
